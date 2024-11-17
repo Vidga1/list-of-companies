@@ -1,26 +1,42 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from 'react'
+import { useDispatch } from 'react-redux'
+import { setCompanies } from './store/companySlice'
+import { generateCompanies } from './utils/generateCompanies'
+import CompanyTable from './components/CompanyTable'
+import './App.css'
 
-function App() {
+const App: React.FC = () => {
+  const dispatch = useDispatch()
+  const [companyCount, setCompanyCount] = useState(5)
+
+  useEffect(() => {
+    const companies = generateCompanies(companyCount)
+    dispatch(setCompanies(companies))
+  }, [dispatch, companyCount])
+
+  const handleCompanyCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10)
+    if (!isNaN(value) && value >= 0) {
+      setCompanyCount(value)
+    }
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="container">
+      <h1 className="title">Список компаний</h1>
+      <div className="input-wrapper">
+        <label htmlFor="companyCount">Количество компаний: </label>
+        <input
+          type="number"
+          id="companyCount"
+          value={companyCount}
+          onChange={handleCompanyCountChange}
+          min="0"
+        />
+      </div>
+      <CompanyTable />
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
