@@ -7,7 +7,6 @@ export function generateCompanies(count: number): Company[] {
       id: i,
       name: `Компания ${i}`,
       address: `Адрес ${i}`,
-      isSelected: false,
     })
   }
   return companies

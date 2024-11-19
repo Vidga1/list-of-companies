@@ -4,7 +4,6 @@ interface Company {
   id: number
   name: string
   address: string
-  isSelected: boolean
 }
 
 type StringKeys<T> = {
@@ -15,10 +14,12 @@ type CompanyStringFields = StringKeys<Company>
 
 interface CompanyState {
   companies: Company[]
+  selectedCompanyIds: number[]
 }
 
 const initialState: CompanyState = {
   companies: [],
+  selectedCompanyIds: [],
 }
 
 const companySlice = createSlice({
@@ -27,15 +28,10 @@ const companySlice = createSlice({
   reducers: {
     setCompanies(state, action: PayloadAction<Company[]>) {
       state.companies = action.payload
+      state.selectedCompanyIds = []
     },
     addCompany(state, action: PayloadAction<Company>) {
       state.companies.unshift(action.payload)
-    },
-    updateCompany(state, action: PayloadAction<Company>) {
-      const index = state.companies.findIndex((c) => c.id === action.payload.id)
-      if (index !== -1) {
-        state.companies[index] = action.payload
-      }
     },
     updateCompanyField(
       state,
@@ -52,18 +48,30 @@ const companySlice = createSlice({
       }
     },
     deleteCompanies(state, action: PayloadAction<number[]>) {
+      const idsToDelete = action.payload
       state.companies = state.companies.filter(
-        (c) => !action.payload.includes(c.id)
+        (c) => !idsToDelete.includes(c.id)
+      )
+      state.selectedCompanyIds = state.selectedCompanyIds.filter(
+        (id) => !idsToDelete.includes(id)
       )
     },
     toggleSelectCompany(state, action: PayloadAction<number>) {
-      const company = state.companies.find((c) => c.id === action.payload)
-      if (company) {
-        company.isSelected = !company.isSelected
+      const id = action.payload
+      if (state.selectedCompanyIds.includes(id)) {
+        state.selectedCompanyIds = state.selectedCompanyIds.filter(
+          (selectedId) => selectedId !== id
+        )
+      } else {
+        state.selectedCompanyIds.push(id)
       }
     },
     selectAllCompanies(state, action: PayloadAction<boolean>) {
-      state.companies.forEach((c) => (c.isSelected = action.payload))
+      if (action.payload) {
+        state.selectedCompanyIds = state.companies.map((c) => c.id)
+      } else {
+        state.selectedCompanyIds = []
+      }
     },
   },
 })
@@ -71,7 +79,6 @@ const companySlice = createSlice({
 export const {
   setCompanies,
   addCompany,
-  updateCompany,
   updateCompanyField,
   deleteCompanies,
   toggleSelectCompany,
