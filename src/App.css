@@ -233,3 +233,78 @@ input[type='checkbox'] {
     width: 160px; /* Adjusted for mobile */
   }
 }
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(123, 104, 238, 0.2);
+  border: 2px solid #7b68ee;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 240px); /* Adjust to prevent overflow */
+}
+
+.table-header {
+  flex-shrink: 0;
+}
+
+.table-body {
+  flex-grow: 1;
+}
+
+.table-row {
+  display: flex;
+  width: 100%;
+  border-bottom: 1px solid #7b68ee;
+}
+
+.table-cell {
+  flex: 1;
+  padding: 18px;
+  text-align: left;
+  color: #e9ecef;
+}
+
+.table-row:nth-child(even) {
+  background: rgba(123, 104, 238, 0.05);
+}
+
+.table-row.selected {
+  background: rgba(123, 104, 238, 0.15);
+  border-left: 4px solid #7b68ee;
+}
+
+.table-row:hover {
+  background: rgba(123, 104, 238, 0.1);
+  transition: all 0.3s ease;
+}
+
+.table-cell:first-child {
+  flex: 0 0 200px; /* Adjust as needed */
+}
+
+.table-cell:nth-child(2),
+.table-cell:nth-child(3) {
+  flex: 1;
+}
+
+.editable {
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  min-width: 100px;
+  transition: all 0.3s ease;
+  color: #e9ecef;
+  cursor: default;
+}
+
+.editable[contenteditable='true'] {
+  cursor: text;
+  border-color: #7b68ee;
+  outline: none;
+  background: rgba(123, 104, 238, 0.1);
+  box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.2);
+}

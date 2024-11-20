@@ -6,95 +6,82 @@ export interface Company {
   address: string
 }
 
-interface UpdateCompanyPayload {
-  id: number
-  field: keyof Company
-  value: string
-}
+type UpdatableCompanyFields = 'name' | 'address'
 
 interface CompanyState {
-  companies: Company[]
-  selected: Set<number>
+  companyCount: number
+  selectedIds: Set<number>
   allSelected: boolean
+  updatedCompanies: { [key: number]: Company }
 }
 
 const initialState: CompanyState = {
-  companies: [],
-  selected: new Set(),
+  companyCount: 0,
+  selectedIds: new Set(),
   allSelected: false,
+  updatedCompanies: {},
 }
 
-function generateCompanyData(count: number): Company[] {
+function generateCompanyData(id: number): Company {
   const streets = ['Ленина', 'Пушкина', 'Гагарина', 'Мира', 'Советская']
-  return Array.from({ length: count }, (_, index) => ({
-    id: index + 1,
-    name: `Компания ${index + 1}`,
-    address: `ул. ${streets[index % streets.length]}, ${
-      Math.floor(Math.random() * 200) + 1
-    }`,
-  }))
+  return {
+    id,
+    name: `Компания ${id}`,
+    address: `ул. ${streets[id % streets.length]}, ${((id * 7) % 200) + 1}`,
+  }
 }
 
 const companySlice = createSlice({
   name: 'companies',
   initialState,
   reducers: {
-    addCompanies: (state, action: PayloadAction<number>) => {
-      state.companies = generateCompanyData(action.payload)
-      state.selected.clear()
+    setCompanyCount: (state, action: PayloadAction<number>) => {
+      state.companyCount = action.payload
+      state.selectedIds.clear()
       state.allSelected = false
+      state.updatedCompanies = {}
     },
     toggleSelect: (state, action: PayloadAction<number>) => {
-      if (state.allSelected) {
-        state.allSelected = false
-        state.selected.clear()
-        state.companies.forEach((company) => {
-          if (company.id !== action.payload) {
-            state.selected.add(company.id)
-          }
-        })
-      } else if (state.selected.has(action.payload)) {
-        state.selected.delete(action.payload)
+      const id = action.payload
+      if (state.selectedIds.has(id)) {
+        state.selectedIds.delete(id)
       } else {
-        state.selected.add(action.payload)
+        state.selectedIds.add(id)
       }
     },
     toggleSelectAll: (state) => {
       state.allSelected = !state.allSelected
-      if (state.allSelected) {
-        state.selected = new Set(state.companies.map((company) => company.id))
-      } else {
-        state.selected.clear()
-      }
+      state.selectedIds.clear()
     },
     deleteSelected: (state) => {
       if (state.allSelected) {
-        state.companies = []
+        state.companyCount = 0
       } else {
-        state.companies = state.companies.filter(
-          (company) => !state.selected.has(company.id)
-        )
+        state.companyCount -= state.selectedIds.size
       }
-      state.selected.clear()
+      state.selectedIds.clear()
       state.allSelected = false
+      state.updatedCompanies = {}
     },
-    updateCompany: (state, action: PayloadAction<UpdateCompanyPayload>) => {
+    updateCompany: (
+      state,
+      action: PayloadAction<{
+        id: number
+        field: UpdatableCompanyFields
+        value: string
+      }>
+    ) => {
       const { id, field, value } = action.payload
-      const companyIndex = state.companies.findIndex(
-        (company) => company.id === id
-      )
-      if (companyIndex !== -1) {
-        state.companies[companyIndex] = {
-          ...state.companies[companyIndex],
-          [field]: value,
-        }
+      if (!state.updatedCompanies[id]) {
+        state.updatedCompanies[id] = generateCompanyData(id)
       }
+      state.updatedCompanies[id][field] = value
     },
   },
 })
 
 export const {
-  addCompanies,
+  setCompanyCount,
   toggleSelect,
   toggleSelectAll,
   deleteSelected,

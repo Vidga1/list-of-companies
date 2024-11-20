@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
-  addCompanies,
+  setCompanyCount,
   toggleSelect,
   toggleSelectAll,
   deleteSelected,
@@ -9,77 +9,145 @@ import {
   Company,
 } from '../store/companySlice'
 import { RootState } from '../store/store'
+import { FixedSizeList as List, ListChildComponentProps } from 'react-window'
+
+function generateCompanyData(id: number): Company {
+  const streets = ['Ленина', 'Пушкина', 'Гагарина', 'Мира', 'Советская']
+  return {
+    id,
+    name: `Компания ${id}`,
+    address: `ул. ${streets[id % streets.length]}, ${((id * 7) % 200) + 1}`,
+  }
+}
 
 const CompanyList: React.FC = () => {
   const dispatch = useDispatch()
-  const companies = useSelector(
-    (state: RootState) => state.companies.companies
-  ) as Company[]
-  const selected = useSelector((state: RootState) => state.companies.selected)
+  const companyCount = useSelector(
+    (state: RootState) => state.companies.companyCount
+  )
+  const selectedIds = useSelector(
+    (state: RootState) => state.companies.selectedIds
+  )
   const allSelected = useSelector(
     (state: RootState) => state.companies.allSelected
   )
-  const [companyCount, setCompanyCount] = useState<number>(5)
-  const [pageSize, setPageSize] = useState(50)
-  const [renderedCompanies, setRenderedCompanies] = useState<Company[]>([])
-  const [startIndex, setStartIndex] = useState(0)
+  const updatedCompanies = useSelector(
+    (state: RootState) => state.companies.updatedCompanies
+  )
+  const [inputCompanyCount, setInputCompanyCount] = useState<number>(5)
 
-  useEffect(() => {
-    setRenderedCompanies(companies.slice(startIndex, startIndex + pageSize))
-  }, [companies, selected, allSelected, startIndex])
+  const handleSetCompanyCount = useCallback(() => {
+    dispatch(setCompanyCount(inputCompanyCount))
+  }, [dispatch, inputCompanyCount])
 
-  const handleScroll = () => {
-    const tbody = document.getElementById('tableBody')
-    if (
-      tbody &&
-      tbody.scrollHeight - tbody.scrollTop - tbody.clientHeight < 50
-    ) {
-      setStartIndex((prevStartIndex) =>
-        Math.min(prevStartIndex + pageSize, companies.length - pageSize)
-      )
-    }
-  }
+  const handleToggleSelect = useCallback(
+    (id: number) => {
+      dispatch(toggleSelect(id))
+    },
+    [dispatch]
+  )
 
-  useEffect(() => {
-    const tbody = document.getElementById('tableBody')
-    if (tbody) {
-      tbody.addEventListener('scroll', handleScroll)
-      return () => tbody.removeEventListener('scroll', handleScroll)
-    }
-  }, [companies.length])
-
-  const handleAddCompanies = () => {
-    const inputElement = document.getElementById(
-      'companyCount'
-    ) as HTMLInputElement | null // Приведение типа с учетом null
-    if (inputElement) {
-      // Проверка на null
-      const count = parseInt(inputElement.value) || 0 // Используйте .value после проверки
-      dispatch(addCompanies(count))
-      setStartIndex(0)
-    }
-  }
-
-  const handleToggleSelect = (id: number) => {
-    dispatch(toggleSelect(id))
-  }
-
-  const handleToggleSelectAll = () => {
+  const handleToggleSelectAll = useCallback(() => {
     dispatch(toggleSelectAll())
-  }
+  }, [dispatch])
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = useCallback(() => {
     dispatch(deleteSelected())
-    setStartIndex(0) // Сброс startIndex после удаления компаний
-  }
+  }, [dispatch])
 
-  const handleUpdateCompany = (
-    id: number,
-    field: keyof Company,
-    value: string
-  ) => {
-    dispatch(updateCompany({ id, field, value }))
-  }
+  const handleUpdateCompany = useCallback(
+    (id: number, field: 'name' | 'address', value: string) => {
+      dispatch(updateCompany({ id, field, value }))
+    },
+    [dispatch]
+  )
+
+  const isCompanySelected = useCallback(
+    (id: number) => {
+      if (allSelected) {
+        return !selectedIds.has(id)
+      } else {
+        return selectedIds.has(id)
+      }
+    },
+    [allSelected, selectedIds]
+  )
+
+  const Row = useCallback(
+    ({ index, style }: ListChildComponentProps) => {
+      const id = index + 1
+      const company = updatedCompanies[id] || generateCompanyData(id)
+      const selected = isCompanySelected(id)
+      return (
+        <div
+          style={style}
+          className={`table-row ${selected ? 'selected' : ''}`}
+        >
+          <div className="table-cell">
+            <div className="checkbox-wrapper">
+              <input
+                type="checkbox"
+                id={`company${id}`}
+                checked={selected}
+                onChange={() => handleToggleSelect(id)}
+              />
+              <label htmlFor={`company${id}`} className="checkbox-label">
+                Выбрать
+              </label>
+            </div>
+          </div>
+          <div className="table-cell">
+            <div
+              className="editable"
+              contentEditable={false}
+              suppressContentEditableWarning={true}
+              onDoubleClick={(e) => {
+                ;(e.target as HTMLElement).contentEditable = 'true'
+                ;(e.target as HTMLElement).focus()
+              }}
+              onBlur={(e) => {
+                handleUpdateCompany(
+                  id,
+                  'name',
+                  (e.target as HTMLElement).textContent || ''
+                )
+                ;(e.target as HTMLElement).contentEditable = 'false'
+              }}
+            >
+              {company.name}
+            </div>
+          </div>
+          <div className="table-cell">
+            <div
+              className="editable"
+              contentEditable={false}
+              suppressContentEditableWarning={true}
+              onDoubleClick={(e) => {
+                ;(e.target as HTMLElement).contentEditable = 'true'
+                ;(e.target as HTMLElement).focus()
+              }}
+              onBlur={(e) => {
+                handleUpdateCompany(
+                  id,
+                  'address',
+                  (e.target as HTMLElement).textContent || ''
+                )
+                ;(e.target as HTMLElement).contentEditable = 'false'
+              }}
+            >
+              {company.address}
+            </div>
+          </div>
+        </div>
+      )
+    },
+    [
+      isCompanySelected,
+      handleToggleSelect,
+      handleUpdateCompany,
+      updatedCompanies,
+    ]
+  )
 
   return (
     <div className="container">
@@ -90,11 +158,13 @@ const CompanyList: React.FC = () => {
             type="number"
             id="companyCount"
             min="1"
-            value={companyCount}
-            onChange={(e) => setCompanyCount(parseInt(e.target.value) || 0)}
+            value={inputCompanyCount}
+            onChange={(e) =>
+              setInputCompanyCount(parseInt(e.target.value) || 0)
+            }
             placeholder="Количество компаний"
           />
-          <button className="add-btn" onClick={handleAddCompanies}>
+          <button className="add-btn" onClick={handleSetCompanyCount}>
             <svg
               width="20"
               height="20"
@@ -110,15 +180,18 @@ const CompanyList: React.FC = () => {
           </button>
         </div>
       </div>
-      <table id="companiesTable">
-        <thead>
-          <tr>
-            <th>
+      <div className="table">
+        <div className="table-header">
+          <div className="table-row">
+            <div className="table-cell">
               <div className="checkbox-wrapper">
                 <input
                   type="checkbox"
                   id="selectAll"
-                  checked={allSelected}
+                  checked={
+                    (allSelected && selectedIds.size === 0) ||
+                    (!allSelected && selectedIds.size === companyCount)
+                  }
                   onChange={handleToggleSelectAll}
                 />
                 <label htmlFor="selectAll" className="checkbox-label">
@@ -142,81 +215,22 @@ const CompanyList: React.FC = () => {
                   </svg>
                 </div>
               </div>
-            </th>
-            <th>Название компании</th>
-            <th>Адрес</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          {renderedCompanies.map((company) => (
-            <tr
-              key={company.id}
-              className={
-                selected.has(company.id) || allSelected ? 'selected' : ''
-              }
-            >
-              <td>
-                <div className="checkbox-wrapper">
-                  <input
-                    type="checkbox"
-                    id={`company${company.id}`}
-                    checked={selected.has(company.id) || allSelected}
-                    onChange={() => handleToggleSelect(company.id)}
-                  />
-                  <label
-                    htmlFor={`company${company.id}`}
-                    className="checkbox-label"
-                  >
-                    Выбрать
-                  </label>
-                </div>
-              </td>
-              <td>
-                <div
-                  className="editable"
-                  contentEditable={false}
-                  suppressContentEditableWarning={true}
-                  onDoubleClick={(e) => {
-                    ;(e.target as HTMLElement).contentEditable = 'true'
-                    ;(e.target as HTMLElement).focus()
-                  }}
-                  onBlur={(e) => {
-                    handleUpdateCompany(
-                      company.id,
-                      'name',
-                      (e.target as HTMLElement).textContent || ''
-                    )
-                    ;(e.target as HTMLElement).contentEditable = 'false'
-                  }}
-                >
-                  {company.name}
-                </div>
-              </td>
-              <td>
-                <div
-                  className="editable"
-                  contentEditable={false}
-                  suppressContentEditableWarning={true}
-                  onDoubleClick={(e) => {
-                    ;(e.target as HTMLElement).contentEditable = 'true'
-                    ;(e.target as HTMLElement).focus()
-                  }}
-                  onBlur={(e) => {
-                    handleUpdateCompany(
-                      company.id,
-                      'address',
-                      (e.target as HTMLElement).textContent || ''
-                    )
-                    ;(e.target as HTMLElement).contentEditable = 'false'
-                  }}
-                >
-                  {company.address}
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            </div>
+            <div className="table-cell">Название компании</div>
+            <div className="table-cell">Адрес</div>
+          </div>
+        </div>
+        <div className="table-body">
+          <List
+            height={window.innerHeight - 300}
+            itemCount={companyCount}
+            itemSize={70} // Подберите оптимальное значение
+            width={'100%'}
+          >
+            {Row}
+          </List>
+        </div>
+      </div>
     </div>
   )
 }
