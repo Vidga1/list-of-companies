@@ -1,89 +1,104 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-interface Company {
+export interface Company {
   id: number
   name: string
   address: string
 }
 
-type StringKeys<T> = {
-  [K in keyof T]: T[K] extends string ? K : never
-}[keyof T]
-
-type CompanyStringFields = StringKeys<Company>
+interface UpdateCompanyPayload {
+  id: number
+  field: keyof Company
+  value: string
+}
 
 interface CompanyState {
   companies: Company[]
-  selectedCompanyIds: number[]
+  selected: Set<number>
+  allSelected: boolean
 }
 
 const initialState: CompanyState = {
   companies: [],
-  selectedCompanyIds: [],
+  selected: new Set(),
+  allSelected: false,
+}
+
+function generateCompanyData(count: number): Company[] {
+  const streets = ['Ленина', 'Пушкина', 'Гагарина', 'Мира', 'Советская']
+  return Array.from({ length: count }, (_, index) => ({
+    id: index + 1,
+    name: `Компания ${index + 1}`,
+    address: `ул. ${streets[index % streets.length]}, ${
+      Math.floor(Math.random() * 200) + 1
+    }`,
+  }))
 }
 
 const companySlice = createSlice({
   name: 'companies',
   initialState,
   reducers: {
-    setCompanies(state, action: PayloadAction<Company[]>) {
-      state.companies = action.payload
-      state.selectedCompanyIds = []
+    addCompanies: (state, action: PayloadAction<number>) => {
+      state.companies = generateCompanyData(action.payload)
+      state.selected.clear()
+      state.allSelected = false
     },
-    addCompany(state, action: PayloadAction<Company>) {
-      state.companies.unshift(action.payload)
-    },
-    updateCompanyField(
-      state,
-      action: PayloadAction<{
-        id: number
-        field: CompanyStringFields
-        value: string
-      }>
-    ) {
-      const { id, field, value } = action.payload
-      const company = state.companies.find((c) => c.id === id)
-      if (company) {
-        company[field] = value
+    toggleSelect: (state, action: PayloadAction<number>) => {
+      if (state.allSelected) {
+        state.allSelected = false
+        state.selected.clear()
+        state.companies.forEach((company) => {
+          if (company.id !== action.payload) {
+            state.selected.add(company.id)
+          }
+        })
+      } else if (state.selected.has(action.payload)) {
+        state.selected.delete(action.payload)
+      } else {
+        state.selected.add(action.payload)
       }
     },
-    deleteCompanies(state, action: PayloadAction<number[]>) {
-      const idsToDelete = action.payload
-      state.companies = state.companies.filter(
-        (c) => !idsToDelete.includes(c.id)
-      )
-      state.selectedCompanyIds = state.selectedCompanyIds.filter(
-        (id) => !idsToDelete.includes(id)
-      )
+    toggleSelectAll: (state) => {
+      state.allSelected = !state.allSelected
+      if (state.allSelected) {
+        state.selected = new Set(state.companies.map((company) => company.id))
+      } else {
+        state.selected.clear()
+      }
     },
-    toggleSelectCompany(state, action: PayloadAction<number>) {
-      const id = action.payload
-      if (state.selectedCompanyIds.includes(id)) {
-        state.selectedCompanyIds = state.selectedCompanyIds.filter(
-          (selectedId) => selectedId !== id
+    deleteSelected: (state) => {
+      if (state.allSelected) {
+        state.companies = []
+      } else {
+        state.companies = state.companies.filter(
+          (company) => !state.selected.has(company.id)
         )
-      } else {
-        state.selectedCompanyIds.push(id)
       }
+      state.selected.clear()
+      state.allSelected = false
     },
-    selectAllCompanies(state, action: PayloadAction<boolean>) {
-      if (action.payload) {
-        state.selectedCompanyIds = state.companies.map((c) => c.id)
-      } else {
-        state.selectedCompanyIds = []
+    updateCompany: (state, action: PayloadAction<UpdateCompanyPayload>) => {
+      const { id, field, value } = action.payload
+      const companyIndex = state.companies.findIndex(
+        (company) => company.id === id
+      )
+      if (companyIndex !== -1) {
+        state.companies[companyIndex] = {
+          ...state.companies[companyIndex],
+          [field]: value,
+        }
       }
     },
   },
 })
 
 export const {
-  setCompanies,
-  addCompany,
-  updateCompanyField,
-  deleteCompanies,
-  toggleSelectCompany,
-  selectAllCompanies,
+  addCompanies,
+  toggleSelect,
+  toggleSelectAll,
+  deleteSelected,
+  updateCompany,
 } = companySlice.actions
 
 export default companySlice.reducer
-export type { Company }
