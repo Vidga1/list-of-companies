@@ -1,4 +1,3 @@
-// src/store/companySlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { Company } from '../types/company'
 import { generateCompanyData } from '../utils/generateCompanyData'
@@ -49,12 +48,10 @@ const companySlice = createSlice({
     },
     deleteSelectedCompanies: (state) => {
       if (state.allDeleted) {
-        // Если все удалены, то восстанавливаем выбранные
         state.selectedIds.forEach((id) => {
           state.deletedIds.delete(id)
         })
       } else {
-        // Если не все удалены, то удаляем выбранные
         state.selectedIds.forEach((id) => {
           state.deletedIds.add(id)
         })
@@ -64,7 +61,7 @@ const companySlice = createSlice({
     },
     deleteAllCompanies: (state) => {
       state.allDeleted = true
-      state.deletedIds.clear() // Очистка, так как все уже удалены
+      state.deletedIds.clear()
       state.selectedIds.clear()
       state.allSelected = false
     },

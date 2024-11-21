@@ -1,4 +1,3 @@
-// src/components/CompanyList.tsx
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
@@ -34,10 +33,10 @@ const CompanyList: React.FC = () => {
   const allDeleted = useSelector(
     (state: RootState) => state.companies.allDeleted
   )
-  const [inputCompanyCount, setInputCompanyCount] = useState<string>('5')
+  const [inputCompanyCount, setInputCompanyCount] = useState<string>('')
 
   const tableBodyRef = useRef<HTMLDivElement>(null)
-  const [listHeight, setListHeight] = useState<number>(400) // начальная высота
+  const [listHeight, setListHeight] = useState<number>(400)
 
   useEffect(() => {
     const updateListHeight = () => {
@@ -68,7 +67,9 @@ const CompanyList: React.FC = () => {
   }, [dispatch])
 
   const handleDeleteAll = useCallback(() => {
+    setCompanyCount(0)
     dispatch(deleteAllCompanies())
+    setInputCompanyCount('')
   }, [dispatch])
 
   const handleUpdateCompany = useCallback(
@@ -98,14 +99,14 @@ const CompanyList: React.FC = () => {
         }
         id++
       }
-      return -1 // Должно быть не так
+      return -1
     },
     [companyCount, deletedIds]
   )
 
   const isCompanySelected = useCallback(
     (id: number) => {
-      if (allDeleted) return false // Если все удалены, выбор не возможен
+      if (allDeleted) return false
       if (deletedIds.has(id)) return false
       if (allSelected) {
         return !selectedIds.has(id)
@@ -119,7 +120,7 @@ const CompanyList: React.FC = () => {
   const Row = useCallback(
     ({ index, style }: ListChildComponentProps) => {
       const id = getCompanyIdByIndex(index)
-      if (id === -1) return null // Проверка безопасности
+      if (id === -1) return null
       const company = updatedCompanies[id] || generateCompanyData(id)
       const selected = isCompanySelected(id)
       const isEven = index % 2 === 0

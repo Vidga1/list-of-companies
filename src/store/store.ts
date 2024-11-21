@@ -1,4 +1,3 @@
-// src/store/store.ts
 import { configureStore } from '@reduxjs/toolkit'
 import companyReducer from './companySlice'
 import { enableMapSet } from 'immer'

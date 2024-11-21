@@ -37,11 +37,12 @@ body {
   text-transform: uppercase;
   letter-spacing: 2px;
   background: linear-gradient(45deg, #e9ecef, #7b68ee);
+  background-clip: text;
   -webkit-background-clip: text;
+  color: transparent;
   -webkit-text-fill-color: transparent;
 }
 
-/* Кнопки */
 .buttons {
   display: flex;
   gap: 25px;
@@ -105,7 +106,6 @@ button {
   background: rgba(232, 61, 111, 0.2);
 }
 
-/* Поле ввода */
 input[type='text'] {
   padding: 12px;
   border: 2px solid #7b68ee;
@@ -123,7 +123,6 @@ input[type='text']:focus {
   box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.2);
 }
 
-/* Чекбоксы */
 input[type='checkbox'] {
   width: 22px;
   height: 22px;
@@ -145,14 +144,12 @@ input[type='checkbox'] {
   cursor: pointer;
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
   input[type='text'] {
     width: 160px;
   }
 }
 
-/* Таблица */
 .table {
   width: 100%;
   margin: 10px 0;
@@ -225,7 +222,6 @@ input[type='checkbox'] {
   flex: 0 0 415px;
 }
 
-/* Заголовок таблицы */
 .table-header .table-cell {
   font-weight: 600;
   text-transform: uppercase;
@@ -245,7 +241,6 @@ input[type='checkbox'] {
   border-bottom: 2px solid #7b68ee;
 }
 
-/* Редактируемые поля */
 .editable {
   padding: 8px;
   border: 1px solid transparent;
@@ -264,7 +259,6 @@ input[type='checkbox'] {
   box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.2);
 }
 
-/* Сообщение об отсутствии компаний */
 .no-companies {
   text-align: center;
   padding: 20px;
