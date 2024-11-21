@@ -1,3 +1,4 @@
+// src/components/CompanyList.tsx
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
@@ -5,7 +6,6 @@ import {
   toggleSelect,
   toggleSelectAll,
   deleteSelectedCompanies,
-  deleteAllCompanies,
   updateCompany,
 } from '../store/companySlice'
 import { RootState } from '../store/store'
@@ -30,13 +30,10 @@ const CompanyList: React.FC = () => {
   const deletedIds = useSelector(
     (state: RootState) => state.companies.deletedIds
   )
-  const allDeleted = useSelector(
-    (state: RootState) => state.companies.allDeleted
-  )
-  const [inputCompanyCount, setInputCompanyCount] = useState<string>('')
+  const [inputCompanyCount, setInputCompanyCount] = useState<string>('5')
 
   const tableBodyRef = useRef<HTMLDivElement>(null)
-  const [listHeight, setListHeight] = useState<number>(400)
+  const [listHeight, setListHeight] = useState<number>(400) // начальная высота
 
   useEffect(() => {
     const updateListHeight = () => {
@@ -67,8 +64,9 @@ const CompanyList: React.FC = () => {
   }, [dispatch])
 
   const handleDeleteAll = useCallback(() => {
-    setCompanyCount(0)
-    dispatch(deleteAllCompanies())
+    // Устанавливаем количество компаний в 0, что удалит все компании
+    dispatch(setCompanyCount(0))
+    // Очищаем поле ввода
     setInputCompanyCount('')
   }, [dispatch])
 
@@ -80,33 +78,27 @@ const CompanyList: React.FC = () => {
   )
 
   const visibleCompanyCount = useMemo(() => {
-    if (allDeleted) {
-      return 0
-    }
     return companyCount - deletedIds.size
-  }, [allDeleted, deletedIds.size, companyCount])
+  }, [deletedIds.size, companyCount])
 
-  const getCompanyIdByIndex = useCallback(
-    (index: number): number => {
-      let id = 1
-      let found = 0
-      while (id <= companyCount) {
-        if (!deletedIds.has(id)) {
-          if (found === index) {
-            return id
-          }
-          found++
-        }
-        id++
+  // Синхронизируем inputCompanyCount с visibleCompanyCount
+  useEffect(() => {
+    setInputCompanyCount(visibleCompanyCount.toString())
+  }, [visibleCompanyCount])
+
+  // Создаём массив доступных ID компаний
+  const availableIds = useMemo(() => {
+    const ids: number[] = []
+    for (let id = 1; id <= companyCount; id++) {
+      if (!deletedIds.has(id)) {
+        ids.push(id)
       }
-      return -1
-    },
-    [companyCount, deletedIds]
-  )
+    }
+    return ids
+  }, [companyCount, deletedIds])
 
   const isCompanySelected = useCallback(
     (id: number) => {
-      if (allDeleted) return false
       if (deletedIds.has(id)) return false
       if (allSelected) {
         return !selectedIds.has(id)
@@ -114,13 +106,13 @@ const CompanyList: React.FC = () => {
         return selectedIds.has(id)
       }
     },
-    [allDeleted, allSelected, selectedIds, deletedIds]
+    [allSelected, selectedIds, deletedIds]
   )
 
   const Row = useCallback(
     ({ index, style }: ListChildComponentProps) => {
-      const id = getCompanyIdByIndex(index)
-      if (id === -1) return null
+      const id = availableIds[index]
+      if (!id) return null // Проверка безопасности
       const company = updatedCompanies[id] || generateCompanyData(id)
       const selected = isCompanySelected(id)
       const isEven = index % 2 === 0
@@ -138,11 +130,11 @@ const CompanyList: React.FC = () => {
       )
     },
     [
-      getCompanyIdByIndex,
+      availableIds,
+      updatedCompanies,
       isCompanySelected,
       handleToggleSelect,
       handleUpdateCompany,
-      updatedCompanies,
     ]
   )
 
@@ -169,21 +161,19 @@ const CompanyList: React.FC = () => {
             }}
             placeholder="Количество компаний"
           />
+          <button
+            className="delete-selected-btn"
+            onClick={handleDeleteSelected}
+            disabled={
+              (selectedIds.size === 0 && !allSelected) ||
+              visibleCompanyCount === 0
+            }
+            title="Удалить выбранные"
+          >
+            Удалить выбранные
+          </button>
         </div>
-        <button
-          className="delete-selected-btn"
-          onClick={handleDeleteSelected}
-          disabled={
-            (selectedIds.size === 0 && !allSelected) ||
-            visibleCompanyCount === 0 ||
-            allDeleted
-          }
-          title="Удалить выбранные"
-        >
-          Удалить выбранные
-        </button>
       </div>
-
       <div className="table">
         <div className="table-header">
           <div className="table-row">
@@ -230,7 +220,7 @@ const CompanyList: React.FC = () => {
           {visibleCompanyCount > 0 ? (
             <List
               height={listHeight}
-              itemCount={visibleCompanyCount}
+              itemCount={availableIds.length}
               itemSize={70}
               width={'100%'}
             >
