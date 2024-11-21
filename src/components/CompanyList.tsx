@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   setCompanyCount,
@@ -34,6 +34,12 @@ const CompanyList: React.FC = () => {
   const updatedCompanies = useSelector(
     (state: RootState) => state.companies.updatedCompanies
   )
+  const existingIds = useSelector(
+    (state: RootState) => state.companies.existingIds
+  )
+  const allDeleted = useSelector(
+    (state: RootState) => state.companies.allDeleted
+  )
   const [inputCompanyCount, setInputCompanyCount] = useState<number>(5)
 
   const handleSetCompanyCount = useCallback(() => {
@@ -62,26 +68,50 @@ const CompanyList: React.FC = () => {
     [dispatch]
   )
 
+  const visibleCompanyCount = useMemo(() => {
+    return allDeleted ? existingIds.size : companyCount - existingIds.size
+  }, [allDeleted, existingIds.size, companyCount])
+
+  const getCompanyIdByIndex = useCallback(
+    (index: number): number => {
+      let id = index + 1
+      let offset = 0
+      while (
+        (allDeleted && !existingIds.has(id + offset)) ||
+        (!allDeleted && existingIds.has(id + offset))
+      ) {
+        offset++
+      }
+      return id + offset
+    },
+    [existingIds, allDeleted]
+  )
+
   const isCompanySelected = useCallback(
     (id: number) => {
+      const exists = allDeleted ? existingIds.has(id) : !existingIds.has(id)
+      if (!exists) return false
       if (allSelected) {
         return !selectedIds.has(id)
       } else {
         return selectedIds.has(id)
       }
     },
-    [allSelected, selectedIds]
+    [allSelected, selectedIds, existingIds, allDeleted]
   )
 
   const Row = useCallback(
     ({ index, style }: ListChildComponentProps) => {
-      const id = index + 1
-      const company = updatedCompanies[id] || generateCompanyData(id)
+      const id = getCompanyIdByIndex(index)
+      let company = updatedCompanies[id] || generateCompanyData(id)
       const selected = isCompanySelected(id)
+      const isEven = index % 2 === 0
       return (
         <div
           style={style}
-          className={`table-row ${selected ? 'selected' : ''}`}
+          className={`table-row ${selected ? 'selected' : ''} ${
+            isEven ? 'even' : 'odd'
+          }`}
         >
           <div className="table-cell">
             <div className="checkbox-wrapper">
@@ -142,6 +172,7 @@ const CompanyList: React.FC = () => {
       )
     },
     [
+      getCompanyIdByIndex,
       isCompanySelected,
       handleToggleSelect,
       handleUpdateCompany,
@@ -190,7 +221,7 @@ const CompanyList: React.FC = () => {
                   id="selectAll"
                   checked={
                     (allSelected && selectedIds.size === 0) ||
-                    (!allSelected && selectedIds.size === companyCount)
+                    (!allSelected && selectedIds.size === visibleCompanyCount)
                   }
                   onChange={handleToggleSelectAll}
                 />
@@ -223,8 +254,8 @@ const CompanyList: React.FC = () => {
         <div className="table-body">
           <List
             height={window.innerHeight - 300}
-            itemCount={companyCount}
-            itemSize={70} // Подберите оптимальное значение
+            itemCount={visibleCompanyCount}
+            itemSize={70}
             width={'100%'}
           >
             {Row}

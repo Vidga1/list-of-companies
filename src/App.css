@@ -1,3 +1,4 @@
+/* Общие стили */
 * {
   box-sizing: border-box;
   font-family: 'Poppins', sans-serif;
@@ -6,15 +7,14 @@
 body {
   background: linear-gradient(120deg, #1a1a2e, #16213e);
   padding: 20px;
-  height: 100vh; /* Change min-height to height */
+  height: 100vh;
   margin: 0;
-  overflow: hidden; /* Prevent main page scroll */
+  overflow: hidden;
 }
 
+/* Контейнер */
 .container {
   max-width: 1200px;
-  display: flex;
-  align-items: center;
   margin: 0 auto;
   background: rgba(26, 26, 46, 0.95);
   padding: 30px;
@@ -23,135 +23,41 @@ body {
   backdrop-filter: blur(10px);
   color: #e9ecef;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  height: calc(100vh - 40px); /* Adjust container height */
+  height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
 }
 
+/* Заголовок */
 .title {
   text-align: center;
-  color: #e9ecef;
   font-size: 32px;
   margin-bottom: 30px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 2px;
-  text-shadow: 0 0 20px rgba(123, 104, 238, 0.4);
   background: linear-gradient(45deg, #e9ecef, #7b68ee);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 20px 0;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(123, 104, 238, 0.2);
-  border: 2px solid #7b68ee;
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 240px); /* Adjust to prevent overflow */
-}
-
-thead {
-  display: block;
-}
-
-tbody {
-  display: block;
-  overflow-y: auto;
-  height: calc(100% - 60px); /* Accounts for header height */
-  scrollbar-width: thin;
-  scrollbar-color: #7b68ee rgba(123, 104, 238, 0.1);
-}
-
-tbody::-webkit-scrollbar {
-  width: 8px;
-}
-
-tbody::-webkit-scrollbar-track {
-  background: rgba(123, 104, 238, 0.1);
-  border-radius: 4px;
-}
-
-tbody::-webkit-scrollbar-thumb {
-  background: #7b68ee;
-  border-radius: 4px;
-}
-
-tr {
-  display: table;
-  width: 100%;
-  table-layout: fixed;
-}
-
-th,
-td {
-  padding: 18px;
-  text-align: left;
-  border: 1px solid #7b68ee;
-  color: #e9ecef;
-}
-
-th {
-  background: linear-gradient(135deg, #1a1a2e, #7b68ee);
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 14px;
-  letter-spacing: 0.8px;
-}
-
-tr:nth-child(even) {
-  background: rgba(123, 104, 238, 0.05);
-}
-
-tr.selected {
-  background: rgba(123, 104, 238, 0.15);
-  border-left: 4px solid #7b68ee;
-}
-
-tr:hover {
-  background: rgba(123, 104, 238, 0.1);
-  transition: all 0.3s ease;
-}
-
-.editable {
-  padding: 8px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  min-width: 100px;
-  transition: all 0.3s ease;
-  color: #e9ecef;
-  cursor: default; /* Show regular cursor by default */
-}
-
-.editable[contenteditable='true'] {
-  cursor: text;
-  border-color: #7b68ee;
-  outline: none;
-  background: rgba(123, 104, 238, 0.1);
-  box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.2);
-}
-
+/* Кнопки */
 .buttons {
-  display: grid;
-  grid-template-columns: 1fr; /* Change to single column */
-  gap: 30px;
-  margin-bottom: 30px;
+  display: flex;
+  gap: 25px;
   align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
 }
 
 .button-container {
   display: flex;
   gap: 25px;
   align-items: center;
-  justify-content: center; /* Center the contents */
 }
 
 button {
-  padding: 10px 20px; /* Smaller padding */
+  padding: 10px 20px;
   border: none;
   border-radius: 10px;
   cursor: pointer;
@@ -161,17 +67,14 @@ button {
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 42px; /* Reduced height */
-  flex: 1;
+  height: 42px;
 }
 
 .add-btn {
   background: linear-gradient(135deg, #7b68ee, #6c5ce7);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  height: 42px; /* Match input height */
-  flex: 0 0 auto; /* Prevent button from growing */
-  min-width: 140px; /* Set minimum width */
+  min-width: 140px;
 }
 
 .delete-icon {
@@ -189,17 +92,17 @@ button {
   background: rgba(232, 61, 111, 0.2);
 }
 
+/* Поле ввода */
 input[type='number'] {
   padding: 12px;
   border: 2px solid #7b68ee;
   border-radius: 10px;
-  height: 42px; /* Match button height */
-  width: 180px; /* Increased from 140px */
+  height: 42px;
+  width: 180px;
   font-size: 16px;
   transition: all 0.3s ease;
   background: rgba(123, 104, 238, 0.1);
   color: #e9ecef;
-  flex: 0 0 auto; /* Prevent input from growing */
 }
 
 input[type='number']:focus {
@@ -207,6 +110,7 @@ input[type='number']:focus {
   box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.2);
 }
 
+/* Чекбоксы */
 input[type='checkbox'] {
   width: 22px;
   height: 22px;
@@ -228,23 +132,24 @@ input[type='checkbox'] {
   cursor: pointer;
 }
 
+/* Адаптивность */
 @media (max-width: 768px) {
   input[type='number'] {
-    width: 160px; /* Adjusted for mobile */
+    width: 160px;
   }
 }
 
+/* Таблица */
 .table {
   width: 100%;
-  border-collapse: collapse;
-  margin: 20px 0;
+  margin: 10px 0;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(123, 104, 238, 0.2);
   border: 2px solid #7b68ee;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 240px); /* Adjust to prevent overflow */
+  height: calc(100vh - 240px);
 }
 
 .table-header {
@@ -261,20 +166,18 @@ input[type='checkbox'] {
   border-bottom: 1px solid #7b68ee;
 }
 
-.table-cell {
-  flex: 1;
-  padding: 18px;
-  text-align: left;
-  color: #e9ecef;
+.table-row.even {
+  background: rgba(123, 104, 238, 0.05);
 }
 
-.table-row:nth-child(even) {
-  background: rgba(123, 104, 238, 0.05);
+.table-row.odd {
+  background: transparent;
 }
 
 .table-row.selected {
   background: rgba(123, 104, 238, 0.15);
-  border-left: 4px solid #7b68ee;
+  outline: 4px solid #7b68ee;
+  outline-offset: -2px;
 }
 
 .table-row:hover {
@@ -282,15 +185,65 @@ input[type='checkbox'] {
   transition: all 0.3s ease;
 }
 
-.table-cell:first-child {
-  flex: 0 0 200px; /* Adjust as needed */
+.table-cell {
+  flex: 1 1 0;
+  padding: 18px;
+  text-align: left;
+  color: #e9ecef;
+  border-right: 1px solid #7b68ee;
+  display: flex;
+  align-items: center;
 }
 
-.table-cell:nth-child(2),
+.table-cell:last-child {
+  border-right: none;
+}
+
+.table-cell:first-child {
+  flex: 0 0 400px;
+}
+
+/* Заголовок таблицы */
+.table-header .table-cell {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 14px;
+  letter-spacing: 0.4px;
+  border-right: 2px solid #7b68ee;
+  display: flex;
+  align-items: center;
+}
+
+.table-header .table-cell:last-child {
+  border-right: none;
+}
+
+/* Заголовок таблицы */
+.table-header .table-row {
+  background: linear-gradient(135deg, #1a1a2e, #7b68ee);
+  border-bottom: 2px solid #7b68ee;
+}
+
+.table-header .table-cell {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 14px;
+  letter-spacing: 0.8px;
+  border-right: 1px solid #7b68ee;
+  display: flex;
+  align-items: center;
+}
+
+.table-cell:nth-child(1),
 .table-cell:nth-child(3) {
   flex: 1;
 }
 
+.table-header .table-cell:last-child {
+  border-right: none;
+}
+
+/* Редактируемые поля */
 .editable {
   padding: 8px;
   border: 1px solid transparent;

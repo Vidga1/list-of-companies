@@ -1,3 +1,4 @@
+// companySlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 export interface Company {
@@ -13,6 +14,8 @@ interface CompanyState {
   selectedIds: Set<number>
   allSelected: boolean
   updatedCompanies: { [key: number]: Company }
+  existingIds: Set<number>
+  allDeleted: boolean
 }
 
 const initialState: CompanyState = {
@@ -20,6 +23,8 @@ const initialState: CompanyState = {
   selectedIds: new Set(),
   allSelected: false,
   updatedCompanies: {},
+  existingIds: new Set(),
+  allDeleted: false,
 }
 
 function generateCompanyData(id: number): Company {
@@ -40,6 +45,8 @@ const companySlice = createSlice({
       state.selectedIds.clear()
       state.allSelected = false
       state.updatedCompanies = {}
+      state.existingIds.clear()
+      state.allDeleted = false
     },
     toggleSelect: (state, action: PayloadAction<number>) => {
       const id = action.payload
@@ -55,13 +62,23 @@ const companySlice = createSlice({
     },
     deleteSelected: (state) => {
       if (state.allSelected) {
-        state.companyCount = 0
+        state.allDeleted = true
+        state.existingIds = new Set(state.selectedIds)
       } else {
-        state.companyCount -= state.selectedIds.size
+        if (state.allDeleted) {
+          // Если все удалены по умолчанию, добавляем выбранные идентификаторы в existingIds
+          for (const id of state.selectedIds) {
+            state.existingIds.add(id)
+          }
+        } else {
+          // Если все существуют по умолчанию, удаляем выбранные идентификаторы из existingIds
+          for (const id of state.selectedIds) {
+            state.existingIds.delete(id)
+          }
+        }
       }
       state.selectedIds.clear()
       state.allSelected = false
-      state.updatedCompanies = {}
     },
     updateCompany: (
       state,
