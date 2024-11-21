@@ -1,4 +1,3 @@
-// src/components/CompanyList.tsx
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
@@ -33,7 +32,7 @@ const CompanyList: React.FC = () => {
   const [inputCompanyCount, setInputCompanyCount] = useState<string>('5')
 
   const tableBodyRef = useRef<HTMLDivElement>(null)
-  const [listHeight, setListHeight] = useState<number>(400) // начальная высота
+  const [listHeight, setListHeight] = useState<number>(400)
 
   useEffect(() => {
     const updateListHeight = () => {
@@ -64,9 +63,7 @@ const CompanyList: React.FC = () => {
   }, [dispatch])
 
   const handleDeleteAll = useCallback(() => {
-    // Устанавливаем количество компаний в 0, что удалит все компании
     dispatch(setCompanyCount(0))
-    // Очищаем поле ввода
     setInputCompanyCount('')
   }, [dispatch])
 
@@ -81,12 +78,10 @@ const CompanyList: React.FC = () => {
     return companyCount - deletedIds.size
   }, [deletedIds.size, companyCount])
 
-  // Синхронизируем inputCompanyCount с visibleCompanyCount
   useEffect(() => {
     setInputCompanyCount(visibleCompanyCount.toString())
   }, [visibleCompanyCount])
 
-  // Создаём массив доступных ID компаний
   const availableIds = useMemo(() => {
     const ids: number[] = []
     for (let id = 1; id <= companyCount; id++) {
@@ -112,7 +107,7 @@ const CompanyList: React.FC = () => {
   const Row = useCallback(
     ({ index, style }: ListChildComponentProps) => {
       const id = availableIds[index]
-      if (!id) return null // Проверка безопасности
+      if (!id) return null
       const company = updatedCompanies[id] || generateCompanyData(id)
       const selected = isCompanySelected(id)
       const isEven = index % 2 === 0
