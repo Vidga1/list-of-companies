@@ -1,11 +1,7 @@
-// companySlice.ts
+// src/store/companySlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-
-export interface Company {
-  id: number
-  name: string
-  address: string
-}
+import { Company } from '../types/company'
+import { generateCompanyData } from '../utils/generateCompanyData'
 
 type UpdatableCompanyFields = 'name' | 'address'
 
@@ -14,7 +10,7 @@ interface CompanyState {
   selectedIds: Set<number>
   allSelected: boolean
   updatedCompanies: { [key: number]: Company }
-  existingIds: Set<number>
+  deletedIds: Set<number>
   allDeleted: boolean
 }
 
@@ -23,17 +19,8 @@ const initialState: CompanyState = {
   selectedIds: new Set(),
   allSelected: false,
   updatedCompanies: {},
-  existingIds: new Set(),
+  deletedIds: new Set(),
   allDeleted: false,
-}
-
-function generateCompanyData(id: number): Company {
-  const streets = ['Ленина', 'Пушкина', 'Гагарина', 'Мира', 'Советская']
-  return {
-    id,
-    name: `Компания ${id}`,
-    address: `ул. ${streets[id % streets.length]}, ${((id * 7) % 200) + 1}`,
-  }
 }
 
 const companySlice = createSlice({
@@ -45,7 +32,7 @@ const companySlice = createSlice({
       state.selectedIds.clear()
       state.allSelected = false
       state.updatedCompanies = {}
-      state.existingIds.clear()
+      state.deletedIds.clear()
       state.allDeleted = false
     },
     toggleSelect: (state, action: PayloadAction<number>) => {
@@ -60,23 +47,24 @@ const companySlice = createSlice({
       state.allSelected = !state.allSelected
       state.selectedIds.clear()
     },
-    deleteSelected: (state) => {
-      if (state.allSelected) {
-        state.allDeleted = true
-        state.existingIds = new Set(state.selectedIds)
+    deleteSelectedCompanies: (state) => {
+      if (state.allDeleted) {
+        // Если все удалены, то восстанавливаем выбранные
+        state.selectedIds.forEach((id) => {
+          state.deletedIds.delete(id)
+        })
       } else {
-        if (state.allDeleted) {
-          // Если все удалены по умолчанию, добавляем выбранные идентификаторы в existingIds
-          for (const id of state.selectedIds) {
-            state.existingIds.add(id)
-          }
-        } else {
-          // Если все существуют по умолчанию, удаляем выбранные идентификаторы из existingIds
-          for (const id of state.selectedIds) {
-            state.existingIds.delete(id)
-          }
-        }
+        // Если не все удалены, то удаляем выбранные
+        state.selectedIds.forEach((id) => {
+          state.deletedIds.add(id)
+        })
       }
+      state.selectedIds.clear()
+      state.allSelected = false
+    },
+    deleteAllCompanies: (state) => {
+      state.allDeleted = true
+      state.deletedIds.clear() // Очистка, так как все уже удалены
       state.selectedIds.clear()
       state.allSelected = false
     },
@@ -101,7 +89,8 @@ export const {
   setCompanyCount,
   toggleSelect,
   toggleSelectAll,
-  deleteSelected,
+  deleteSelectedCompanies,
+  deleteAllCompanies,
   updateCompany,
 } = companySlice.actions
 

@@ -1,24 +1,18 @@
-import React, { useState, useCallback, useMemo } from 'react'
+// src/components/CompanyList.tsx
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   setCompanyCount,
   toggleSelect,
   toggleSelectAll,
-  deleteSelected,
+  deleteSelectedCompanies,
+  deleteAllCompanies,
   updateCompany,
-  Company,
 } from '../store/companySlice'
 import { RootState } from '../store/store'
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window'
-
-function generateCompanyData(id: number): Company {
-  const streets = ['Ленина', 'Пушкина', 'Гагарина', 'Мира', 'Советская']
-  return {
-    id,
-    name: `Компания ${id}`,
-    address: `ул. ${streets[id % streets.length]}, ${((id * 7) % 200) + 1}`,
-  }
-}
+import { generateCompanyData } from '../utils/generateCompanyData'
+import CompanyRow from './CompanyRow'
 
 const CompanyList: React.FC = () => {
   const dispatch = useDispatch()
@@ -34,17 +28,29 @@ const CompanyList: React.FC = () => {
   const updatedCompanies = useSelector(
     (state: RootState) => state.companies.updatedCompanies
   )
-  const existingIds = useSelector(
-    (state: RootState) => state.companies.existingIds
+  const deletedIds = useSelector(
+    (state: RootState) => state.companies.deletedIds
   )
   const allDeleted = useSelector(
     (state: RootState) => state.companies.allDeleted
   )
-  const [inputCompanyCount, setInputCompanyCount] = useState<number>(5)
+  const [inputCompanyCount, setInputCompanyCount] = useState<string>('5')
 
-  const handleSetCompanyCount = useCallback(() => {
-    dispatch(setCompanyCount(inputCompanyCount))
-  }, [dispatch, inputCompanyCount])
+  const tableBodyRef = useRef<HTMLDivElement>(null)
+  const [listHeight, setListHeight] = useState<number>(400) // начальная высота
+
+  useEffect(() => {
+    const updateListHeight = () => {
+      if (tableBodyRef.current) {
+        const { height } = tableBodyRef.current.getBoundingClientRect()
+        setListHeight(height)
+      }
+    }
+
+    updateListHeight()
+    window.addEventListener('resize', updateListHeight)
+    return () => window.removeEventListener('resize', updateListHeight)
+  }, [])
 
   const handleToggleSelect = useCallback(
     (id: number) => {
@@ -58,7 +64,11 @@ const CompanyList: React.FC = () => {
   }, [dispatch])
 
   const handleDeleteSelected = useCallback(() => {
-    dispatch(deleteSelected())
+    dispatch(deleteSelectedCompanies())
+  }, [dispatch])
+
+  const handleDeleteAll = useCallback(() => {
+    dispatch(deleteAllCompanies())
   }, [dispatch])
 
   const handleUpdateCompany = useCallback(
@@ -69,106 +79,61 @@ const CompanyList: React.FC = () => {
   )
 
   const visibleCompanyCount = useMemo(() => {
-    return allDeleted ? existingIds.size : companyCount - existingIds.size
-  }, [allDeleted, existingIds.size, companyCount])
+    if (allDeleted) {
+      return 0
+    }
+    return companyCount - deletedIds.size
+  }, [allDeleted, deletedIds.size, companyCount])
 
   const getCompanyIdByIndex = useCallback(
     (index: number): number => {
-      let id = index + 1
-      let offset = 0
-      while (
-        (allDeleted && !existingIds.has(id + offset)) ||
-        (!allDeleted && existingIds.has(id + offset))
-      ) {
-        offset++
+      let id = 1
+      let found = 0
+      while (id <= companyCount) {
+        if (!deletedIds.has(id)) {
+          if (found === index) {
+            return id
+          }
+          found++
+        }
+        id++
       }
-      return id + offset
+      return -1 // Должно быть не так
     },
-    [existingIds, allDeleted]
+    [companyCount, deletedIds]
   )
 
   const isCompanySelected = useCallback(
     (id: number) => {
-      const exists = allDeleted ? existingIds.has(id) : !existingIds.has(id)
-      if (!exists) return false
+      if (allDeleted) return false // Если все удалены, выбор не возможен
+      if (deletedIds.has(id)) return false
       if (allSelected) {
         return !selectedIds.has(id)
       } else {
         return selectedIds.has(id)
       }
     },
-    [allSelected, selectedIds, existingIds, allDeleted]
+    [allDeleted, allSelected, selectedIds, deletedIds]
   )
 
   const Row = useCallback(
     ({ index, style }: ListChildComponentProps) => {
       const id = getCompanyIdByIndex(index)
-      let company = updatedCompanies[id] || generateCompanyData(id)
+      if (id === -1) return null // Проверка безопасности
+      const company = updatedCompanies[id] || generateCompanyData(id)
       const selected = isCompanySelected(id)
       const isEven = index % 2 === 0
       return (
-        <div
+        <CompanyRow
+          index={index}
           style={style}
-          className={`table-row ${selected ? 'selected' : ''} ${
-            isEven ? 'even' : 'odd'
-          }`}
-        >
-          <div className="table-cell">
-            <div className="checkbox-wrapper">
-              <input
-                type="checkbox"
-                id={`company${id}`}
-                checked={selected}
-                onChange={() => handleToggleSelect(id)}
-              />
-              <label htmlFor={`company${id}`} className="checkbox-label">
-                Выбрать
-              </label>
-            </div>
-          </div>
-          <div className="table-cell">
-            <div
-              className="editable"
-              contentEditable={false}
-              suppressContentEditableWarning={true}
-              onDoubleClick={(e) => {
-                ;(e.target as HTMLElement).contentEditable = 'true'
-                ;(e.target as HTMLElement).focus()
-              }}
-              onBlur={(e) => {
-                handleUpdateCompany(
-                  id,
-                  'name',
-                  (e.target as HTMLElement).textContent || ''
-                )
-                ;(e.target as HTMLElement).contentEditable = 'false'
-              }}
-            >
-              {company.name}
-            </div>
-          </div>
-          <div className="table-cell">
-            <div
-              className="editable"
-              contentEditable={false}
-              suppressContentEditableWarning={true}
-              onDoubleClick={(e) => {
-                ;(e.target as HTMLElement).contentEditable = 'true'
-                ;(e.target as HTMLElement).focus()
-              }}
-              onBlur={(e) => {
-                handleUpdateCompany(
-                  id,
-                  'address',
-                  (e.target as HTMLElement).textContent || ''
-                )
-                ;(e.target as HTMLElement).contentEditable = 'false'
-              }}
-            >
-              {company.address}
-            </div>
-          </div>
-        </div>
+          id={id}
+          company={company}
+          selected={selected}
+          isEven={isEven}
+          handleToggleSelect={handleToggleSelect}
+          handleUpdateCompany={handleUpdateCompany}
+        />
       )
     },
     [
@@ -186,42 +151,51 @@ const CompanyList: React.FC = () => {
       <div className="buttons">
         <div className="button-container">
           <input
-            type="number"
+            type="text"
             id="companyCount"
-            min="1"
             value={inputCompanyCount}
-            onChange={(e) =>
-              setInputCompanyCount(parseInt(e.target.value) || 0)
-            }
+            onChange={(e) => {
+              const value = e.target.value
+              if (/^\d*$/.test(value)) {
+                setInputCompanyCount(value)
+                const count = parseInt(value, 10)
+                if (!isNaN(count)) {
+                  dispatch(setCompanyCount(count))
+                } else {
+                  dispatch(setCompanyCount(0))
+                }
+              }
+            }}
             placeholder="Количество компаний"
           />
-          <button className="add-btn" onClick={handleSetCompanyCount}>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Добавить
-          </button>
         </div>
+        <button
+          className="delete-selected-btn"
+          onClick={handleDeleteSelected}
+          disabled={
+            (selectedIds.size === 0 && !allSelected) ||
+            visibleCompanyCount === 0 ||
+            allDeleted
+          }
+          title="Удалить выбранные"
+        >
+          Удалить выбранные
+        </button>
       </div>
+
       <div className="table">
         <div className="table-header">
           <div className="table-row">
-            <div className="table-cell">
+            <div className="table-cell checkbox-cell">
               <div className="checkbox-wrapper">
                 <input
                   type="checkbox"
                   id="selectAll"
                   checked={
-                    (allSelected && selectedIds.size === 0) ||
-                    (!allSelected && selectedIds.size === visibleCompanyCount)
+                    visibleCompanyCount > 0 &&
+                    ((allSelected && selectedIds.size === 0) ||
+                      (!allSelected &&
+                        selectedIds.size === visibleCompanyCount))
                   }
                   onChange={handleToggleSelectAll}
                 />
@@ -229,9 +203,9 @@ const CompanyList: React.FC = () => {
                   Выделить всё
                 </label>
                 <div
-                  className="delete-icon"
-                  onClick={handleDeleteSelected}
-                  title="Удалить выбранные"
+                  className="reset-icon"
+                  onClick={handleDeleteAll}
+                  title="Удалить все компании"
                 >
                   <svg
                     width="20"
@@ -247,19 +221,23 @@ const CompanyList: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="table-cell">Название компании</div>
-            <div className="table-cell">Адрес</div>
+            <div className="table-cell name-cell">Название компании</div>
+            <div className="table-cell address-cell">Адрес</div>
           </div>
         </div>
-        <div className="table-body">
-          <List
-            height={window.innerHeight - 300}
-            itemCount={visibleCompanyCount}
-            itemSize={70}
-            width={'100%'}
-          >
-            {Row}
-          </List>
+        <div className="table-body" ref={tableBodyRef}>
+          {visibleCompanyCount > 0 ? (
+            <List
+              height={listHeight}
+              itemCount={visibleCompanyCount}
+              itemSize={70}
+              width={'100%'}
+            >
+              {Row}
+            </List>
+          ) : (
+            <div className="no-companies">Нет компаний для отображения</div>
+          )}
         </div>
       </div>
     </div>

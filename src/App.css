@@ -77,7 +77,20 @@ button {
   min-width: 140px;
 }
 
-.delete-icon {
+.delete-selected-btn {
+  background: linear-gradient(135deg, #e83d6f, #ff6b81);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 160px;
+  cursor: pointer;
+}
+
+.delete-selected-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reset-icon {
   margin-left: 10px;
   cursor: pointer;
   padding: 5px;
@@ -88,12 +101,12 @@ button {
   justify-content: center;
 }
 
-.delete-icon:hover {
+.reset-icon:hover {
   background: rgba(232, 61, 111, 0.2);
 }
 
 /* Поле ввода */
-input[type='number'] {
+input[type='text'] {
   padding: 12px;
   border: 2px solid #7b68ee;
   border-radius: 10px;
@@ -105,7 +118,7 @@ input[type='number'] {
   color: #e9ecef;
 }
 
-input[type='number']:focus {
+input[type='text']:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.2);
 }
@@ -134,7 +147,7 @@ input[type='checkbox'] {
 
 /* Адаптивность */
 @media (max-width: 768px) {
-  input[type='number'] {
+  input[type='text'] {
     width: 160px;
   }
 }
@@ -149,7 +162,7 @@ input[type='checkbox'] {
   border: 2px solid #7b68ee;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 240px);
+  flex-grow: 1;
 }
 
 .table-header {
@@ -158,6 +171,7 @@ input[type='checkbox'] {
 
 .table-body {
   flex-grow: 1;
+  overflow-y: auto;
 }
 
 .table-row {
@@ -186,7 +200,7 @@ input[type='checkbox'] {
 }
 
 .table-cell {
-  flex: 1 1 0;
+  flex: 1;
   padding: 18px;
   text-align: left;
   color: #e9ecef;
@@ -199,8 +213,16 @@ input[type='checkbox'] {
   border-right: none;
 }
 
-.table-cell:first-child {
-  flex: 0 0 400px;
+.checkbox-cell {
+  flex: 0 0 215px;
+}
+
+.name-cell {
+  flex: 0 0 455px;
+}
+
+.address-cell {
+  flex: 0 0 415px;
 }
 
 /* Заголовок таблицы */
@@ -209,38 +231,18 @@ input[type='checkbox'] {
   text-transform: uppercase;
   font-size: 14px;
   letter-spacing: 0.4px;
-  border-right: 2px solid #7b68ee;
-  display: flex;
-  align-items: center;
-}
-
-.table-header .table-cell:last-child {
-  border-right: none;
-}
-
-/* Заголовок таблицы */
-.table-header .table-row {
-  background: linear-gradient(135deg, #1a1a2e, #7b68ee);
-  border-bottom: 2px solid #7b68ee;
-}
-
-.table-header .table-cell {
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 14px;
-  letter-spacing: 0.8px;
   border-right: 1px solid #7b68ee;
   display: flex;
   align-items: center;
 }
 
-.table-cell:nth-child(1),
-.table-cell:nth-child(3) {
-  flex: 1;
-}
-
 .table-header .table-cell:last-child {
   border-right: none;
+}
+
+.table-header .table-row {
+  background: linear-gradient(135deg, #1a1a2e, #7b68ee);
+  border-bottom: 2px solid #7b68ee;
 }
 
 /* Редактируемые поля */
@@ -260,4 +262,12 @@ input[type='checkbox'] {
   outline: none;
   background: rgba(123, 104, 238, 0.1);
   box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.2);
+}
+
+/* Сообщение об отсутствии компаний */
+.no-companies {
+  text-align: center;
+  padding: 20px;
+  color: #e9ecef;
+  font-size: 18px;
 }
